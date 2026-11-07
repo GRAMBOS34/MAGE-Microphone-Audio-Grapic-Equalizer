@@ -1,4 +1,4 @@
-# M.A.G.E - Microphone Audio Graphic Equalizer
+# M.A.G.E - Microphone and Audio Graphic Equalizer
 
 By: Vladimir Jumawan
 
