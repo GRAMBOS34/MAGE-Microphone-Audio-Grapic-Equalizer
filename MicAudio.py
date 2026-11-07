@@ -2,14 +2,12 @@
 """
 Meaning I'm going to probably create an api to do this cross-platform or have to figure out pynput
 """
-import time
-import wave
-import pyaudio
+import sounddevice as sd
+import soundfile as sf
+
 import threading
 
 from evdev import InputDevice, categorize, ecodes
-
-CHUNK = 1024
 
 paused = False
 running = True
@@ -17,21 +15,23 @@ running = True
 # Initialize and to confirm
 device = InputDevice("/dev/input/event3")
 
-audio = pyaudio.PyAudio()
-waveFile = wave.open("test_audio/Plastic_love.wav", "rb")
+data, samplerate = sf.read('test_audio/Dracula.wav')
 
-print(device)
+# This is necessary because it would just brick the audio interface since
+# it would access the hardware directly through ALSA rather than through
+# the Pipewire service. This also gives the bonus of being able to use the
+# master volume of Pipewire to control volume.
 
-OUTPUT_DEVICE_INDEX = 10
-stream = audio.open(
-        format=audio.get_format_from_width(waveFile.getsampwidth()),
-        channels=waveFile.getnchannels(),
-        rate=waveFile.getframerate(),
-        output=True
-    )
+PULSE_DEVICE_INDEX = 18
+sd.default.device = (None, PULSE_DEVICE_INDEX)
+
+sd.play(data, samplerate)
+
+# Prevent the script from exiting early before the audio finishes
+status = sd.wait()
 
 def input_listener():
-    global paused, running
+    global paused
     try:
         for event in device.read_loop():
             # Check for key press (value == 1 means key down)
@@ -48,23 +48,3 @@ listener_thread.start()
 
 if __name__ == "__main__":
     print("Playing... (Press Ctrl+C to exit)")
-
-    try:
-        data = waveFile.readframes(CHUNK)
-        while data != b"" and running:
-            if paused:
-                time.sleep(0.1)
-                continue
-
-            stream.write(data)
-            data = waveFile.readframes(CHUNK)
-
-    except KeyboardInterrupt:
-        pass
-
-    # Cleanup
-    running = False
-    stream.stop_stream()
-    stream.close()
-    audio.terminate()
-    waveFile.close()
