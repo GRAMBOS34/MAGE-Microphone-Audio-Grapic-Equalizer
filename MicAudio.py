@@ -1,5 +1,12 @@
 """
-Meaning I'm going to probably create an api to do this cross-platform or have to figure out pynput
+This file is meant to run on Linux, particularly with a Wayland server.
+
+That's why I didn't use a library like pynput. 
+
+Although this is the plan in the future.
+
+Well it's honestly either I switch the whole thing to pynput or make
+an entire input library built to handle either pynput or evdev
 """
 import sounddevice as sd
 import soundfile as sf
@@ -9,7 +16,7 @@ import threading
 
 import include.input_handling as user_input
 
-from evdev import InputDevice, categorize, ecodes # ! Wayland only, it won't translate to Windows nor Google Colab
+from evdev import InputDevice # ! Wayland only, it won't translate to Windows nor Google Colab
 
 paused = False
 running = True
@@ -24,10 +31,18 @@ sd.default.device = (None, PULSE_DEVICE_INDEX)
 keyboard_device = InputDevice("/dev/input/event3")
 keyboard = user_input.Keyboard(keyboard_device)
 
+"""
+    I'm not exactly too sure yet with doing it like this
+    because honestly I'm not super comfortable with having
+    separate files as completely different objects
+"""
+
 class AudioFilePlayback():
     def __init__(self, filepath:str):
-        self.keyboard = keyboard
+        # ? I should probably have 'keyboard' as a configurable thing here
         self.data, self.samplerate = sf.read(filepath)
+
+        # Basically determines how the data array is read
         self.channels = self.data.shape[1] if len(self.data.shape) > 1 else 1
 
         # Create a separate thread to listen for inputs
