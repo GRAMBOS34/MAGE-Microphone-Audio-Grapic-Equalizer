@@ -3,7 +3,7 @@ This file is meant to run on Linux, particularly with a Wayland server.
 
 That's why I didn't use a library like pynput. 
 
-Although this is the plan in the future.
+Although using pynput is the plan in the future.
 
 Well it's honestly either I switch the whole thing to pynput or make
 an entire input library built to handle either pynput or evdev
@@ -12,14 +12,10 @@ import sounddevice as sd
 import soundfile as sf
 import numpy as np
 import time
-import threading
 
 import include.input_handling as user_input
 
 from evdev import InputDevice # ! Wayland only, it won't translate to Windows nor Google Colab
-
-paused = False
-running = True
 
 # Specifying the default device is necessary because
 # otherwise, it would directly use the hardware itself
@@ -31,54 +27,45 @@ sd.default.device = (None, PULSE_DEVICE_INDEX)
 keyboard_device = InputDevice("/dev/input/event3")
 keyboard = user_input.Keyboard(keyboard_device)
 
-"""
-    I'm not exactly too sure yet with doing it like this
-    because honestly I'm not super comfortable with having
-    separate files as completely different objects
-"""
+class AudioEngine:
+    # TODO: Make the keyboard interface optional (mainly for the Jupyter notebook)
+    def __init__(self, keyboard=keyboard):
+        self.keyboard = keyboard
+        self.running = True
 
-class AudioFilePlayback():
-    def __init__(self, filepath:str):
-        # ? I should probably have 'keyboard' as a configurable thing here
-        self.data, self.samplerate = sf.read(filepath)
+    def enable_audio_playback(self, filepath:str, paused=False):
+        data, samplerate = sf.read(filepath)
 
-        # Basically determines how the data array is read
-        self.channels = self.data.shape[1] if len(self.data.shape) > 1 else 1
+        # Check if it's mono or stereo
+        channels = data.shape[1] if len(data.shape) > 1 else 1
 
-        # Create a separate thread to listen for inputs
-        listener_thread = threading.Thread(target=keyboard.check_key_press, daemon=True)
-        listener_thread.start()
+        info = sf.info(filepath) # ? For metadata and showing a progress indicator (not yet implemented)
 
-    def play_audio(self):
-        # * Gemini code but I'll over-explain
-        # Open a stream to manually feed chunks
-        with sd.OutputStream(samplerate=self.samplerate, channels=self.channels) as stream:
-            """
-                Basically, instead of writing the entire data array into
-                the output stream, like in the use of the basic 'sd.play()'
-                function, we only write a chunk of it at a time. The reason
-                we want to do this is to give us the ability to pause and play
-                the audio at any time because using 'sd.play()' loads the entire
-                file onto the output buffer so the computer will wait for it to 
-                finish before it can execute anything else. Repeatedly loading 
-                chunks into the buffer gives us the ability to play/pause audio.
-            """
-
+        with sd.OutputStream(samplerate=samplerate, channels=channels) as stream:
+           
             # TODO: figure out seeking
+            # TODO: show where in the file it currently is
 
             blocksize = 1024
             block_start_idx = 0
             try:
-                while running and block_start_idx < len(self.data):
+                print("Playing audio...")
+                while self.running == True and block_start_idx < len(data):
+                    paused = self.keyboard.paused # check every loop
+
                     # If paused, sleep briefly and skip writing audio chunks
                     if paused:
                         time.sleep(0.1)
                         continue
                     
                     # Write a chunk of audio
-                    end_idx = min(block_start_idx + blocksize, len(self.data))
-                    stream.write(np.float32(self.data[block_start_idx:end_idx]))
+                    end_idx = min(block_start_idx + blocksize, len(data))
+
+                    # Had to convert to float32 since stream.write doesnt use float64
+                    stream.write(np.float32(data[block_start_idx:end_idx]))
                     block_start_idx = end_idx
                     
-            except KeyboardInterrupt:
-                print("\nPlayback stopped.")
+            except KeyboardInterrupt: # Ctrl + C on the console
+                self.running = False
+
+            print("\nPlayback stopped.")
