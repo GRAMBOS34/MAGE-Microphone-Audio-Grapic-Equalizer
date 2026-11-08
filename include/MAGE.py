@@ -14,6 +14,7 @@ import numpy as np
 import time
 
 import include.input_handling as user_input
+import include.effects as effects
 
 from evdev import InputDevice # ! Wayland only, it won't translate to Windows nor Google Colab (that's not the plan anyway)
 
@@ -29,14 +30,14 @@ sd.default.device = (None, PULSE_DEVICE_INDEX)
 keyboard_device = InputDevice("/dev/input/event3")
 keyboard = user_input.Keyboard(keyboard_device)
 
-class AudioEngine:
+class MAGE:
     # TODO: Make the keyboard interface optional (mainly for the Jupyter notebook)
     # I don't know how to set this to "None" to be honest
     def __init__(self, keyboard=keyboard):
         self.keyboard = keyboard
         self.running = True
 
-    def enable_audio_playback(self, filepath:str, paused=False):
+    def start_audio_playback(self, filepath:str, paused=False):
         data, samplerate = sf.read(filepath)
 
         # Check if it's mono or stereo
@@ -65,7 +66,14 @@ class AudioEngine:
                     end_idx = min(block_start_idx + blocksize, len(data))
 
                     # Had to convert to float32 since stream.write doesnt use float64
-                    stream.write(np.float32(data[block_start_idx:end_idx]))
+                    pre_effect_data_block = np.float32(data[block_start_idx:end_idx])
+
+                    # TODO: make it so that the effect is more modular than this
+                    # like it can be added or removed pretty easily
+                    data_block = effects.high_pass_filter(pre_effect_data_block, samplerate)
+
+                    stream.write(np.float32(data_block))
+
                     block_start_idx = end_idx
                     
             except KeyboardInterrupt: # Ctrl + C on the console
