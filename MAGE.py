@@ -58,8 +58,13 @@ class AudioFilePlayback():
                 the output stream, like in the use of the basic 'sd.play()'
                 function, we only write a chunk of it at a time. The reason
                 we want to do this is to give us the ability to pause and play
-                the audio at any time.
+                the audio at any time because using 'sd.play()' loads the entire
+                file onto the output buffer so the computer will wait for it to 
+                finish before it can execute anything else. Repeatedly loading 
+                chunks into the buffer gives us the ability to play/pause audio.
             """
+
+            # TODO: figure out seeking
 
             blocksize = 1024
             block_start_idx = 0
