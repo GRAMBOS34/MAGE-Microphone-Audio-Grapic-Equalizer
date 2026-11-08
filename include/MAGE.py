@@ -15,7 +15,7 @@ import time
 
 import include.input_handling as user_input
 
-from evdev import InputDevice # ! Wayland only, it won't translate to Windows nor Google Colab
+from evdev import InputDevice # ! Wayland only, it won't translate to Windows nor Google Colab (that's not the plan anyway)
 
 # Specifying the default device is necessary because
 # otherwise, it would directly use the hardware itself
@@ -23,12 +23,15 @@ from evdev import InputDevice # ! Wayland only, it won't translate to Windows no
 PULSE_DEVICE_INDEX = 18
 sd.default.device = (None, PULSE_DEVICE_INDEX)
 
+# ! THIS IS A WAYLAND IMPLEMENTATION
+# ! THIS IS NOT COMPATIBLE WITH WINDOWS OR X11
 # Initialize the keyboard
 keyboard_device = InputDevice("/dev/input/event3")
 keyboard = user_input.Keyboard(keyboard_device)
 
 class AudioEngine:
     # TODO: Make the keyboard interface optional (mainly for the Jupyter notebook)
+    # I don't know how to set this to "None" to be honest
     def __init__(self, keyboard=keyboard):
         self.keyboard = keyboard
         self.running = True

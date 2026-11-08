@@ -10,10 +10,9 @@ class Keyboard:
         self.device = device
 
         self.paused = False
-        self.running = True
 
+    # TODO: Have it so that it can only poll for input when the window/console is in focus (?)
     def check_key_press(self) -> None:
-        print("Debug")
         try:
             for event in self.device.read_loop():
                 # Check for key press (value == 1 means key down)
