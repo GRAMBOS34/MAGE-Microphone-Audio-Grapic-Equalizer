@@ -31,7 +31,7 @@ keyboard_device = InputDevice("/dev/input/event3")
 keyboard = user_input.Keyboard(keyboard_device)
 
 class MAGE:
-    # TODO: Make the keyboard interface optional (mainly for the Jupyter notebook)
+    # TODO: Make the keyboard interface optional
     # I don't know how to set this to "None" to be honest
     def __init__(self, keyboard=keyboard):
         self.keyboard = keyboard
@@ -68,11 +68,13 @@ class MAGE:
                     # Had to convert to float32 since stream.write doesnt use float64
                     pre_effect_data_block = np.float32(data[block_start_idx:end_idx])
 
-                    # TODO: make it so that the effect is more modular than this
+                    # TODO: make it so that applying effects is actually on a different function
                     # like it can be added or removed pretty easily
-                    data_block = effects.high_pass_filter(pre_effect_data_block, samplerate)
+                    data_block = effects.high_pass_filter(pre_effect_data_block, samplerate, 400)
 
-                    stream.write(np.float32(data_block))
+                    # ! Comment one out
+                    # stream.write(np.float32(data_block)) # HPF Applied
+                    stream.write(pre_effect_data_block) # No effect applied
 
                     block_start_idx = end_idx
                     
