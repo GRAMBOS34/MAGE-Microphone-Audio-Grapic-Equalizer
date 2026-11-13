@@ -1,3 +1,4 @@
+import platform
 import time
 import threading
 
@@ -21,6 +22,12 @@ class MAGE:
         self.channels = None
         self.volume = 0.5
 
+        # This may have been unique to my system but it didn't
+        # default to PipeWire but instead ALSA
+        if platform.system() == "Linux":
+            # ! For Linux only
+            sd.default.device = (None, "pipewire")
+    
     # TODO: add file type checking
     def load_audio(self, filepath: str):
         """

@@ -5,7 +5,7 @@ import include.MAGE as Audio
 
 audioEngine = Audio.MAGE() # Load audio engine
 
-file = "test_audio/wav/FlyAway.wav"
+file = "test_audio/wav/PlasticLove.wav"
 audioEngine.load_audio(file)
 
 # * WINDOW INITIALIZATION
