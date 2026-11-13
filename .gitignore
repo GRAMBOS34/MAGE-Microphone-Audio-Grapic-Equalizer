@@ -3,3 +3,4 @@
 *.pyc
 test.py
 **/test_audio/
+todo.txt

@@ -2,11 +2,13 @@
 Mic and keyboard handling
 """
 
-from evdev import InputDevice, categorize, ecodes
 import threading
 
+from evdev import InputDevice, categorize, ecodes
+
+
 class Keyboard:
-    def __init__(self, device:InputDevice) -> None:
+    def __init__(self, device: InputDevice) -> None:
         self.device = device
 
         self.paused = False

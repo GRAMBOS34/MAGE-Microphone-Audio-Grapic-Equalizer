@@ -1,15 +1,22 @@
+import threading
+import tkinter as tk
+from tkinter import ttk
+
 import include.MAGE as Audio
 
-import include.input_handling as user_input
+audioEngine = Audio.MAGE()
 
-from evdev import InputDevice
+file = "test_audio/wav/FlyAway.wav"
+audioEngine.load_audio(file)
 
-keyboard_device = InputDevice("/dev/input/event3")
-keyboard = user_input.Keyboard(keyboard_device)
-keyboard.start_listener_thread()
+WINDOW_DIMENSIONS = "1000x600"
 
-audioEngine = Audio.MAGE(keyboard)
+root = tk.Tk()
+root.geometry(WINDOW_DIMENSIONS)
+root.title("MAGE - Microphone and Audio Graphic Equalizer")
 
-file = "test_audio/wav/Dracula.wav"
+# Create and center the button
+button = tk.Button(root, text="Play Audio", padx=10, pady=5, command=audioEngine.audio_playback)
+button.place(relx=0.5, rely=0.5, anchor="center")
 
-audioEngine.start_audio_playback(filepath=file)
+root.mainloop()
