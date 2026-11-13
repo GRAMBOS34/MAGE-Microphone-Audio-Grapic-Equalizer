@@ -1,4 +1,5 @@
 import time
+import threading
 
 import numpy as np
 import sounddevice as sd
@@ -9,13 +10,14 @@ import include.effects as effects
 class MAGE:
     # TODO: Set a keyboard interface
     def __init__(self):
-        self.running = True
+        self.running = False
         self.paused = False
 
         # Audio Data
         self.data = None
         self.samplerate = None
         self.channels = None
+        self.volume = 0.5
 
     # TODO: add file type checking
     def load_audio(self, filepath: str):
@@ -24,6 +26,21 @@ class MAGE:
         info = sf.info(filepath)  # ? For metadata and showing a progress indicator (not yet implemented)
 
         print(f"{filepath} loaded")
+
+    # * Change Volume
+    def change_volume(self, volume:int):
+        self.volume = volume / 100
+
+    def toggle_play_pause(self):
+        if self.running == False:
+            # Start the audio thread
+            audio_thread = threading.Thread(target=self.audio_playback)
+            audio_thread.daemon = True
+            audio_thread.start()
+            self.running = True
+
+        else:
+            self.paused = not self.paused
 
     def audio_playback(self):
         if self.data is None:
@@ -56,7 +73,7 @@ class MAGE:
 
                     # ! Comment one out
                     # stream.write(np.float32(data_block)) # HPF Applied
-                    stream.write(pre_effect_data_block)  # No effect applied
+                    stream.write(pre_effect_data_block * self.volume)  # No effect applied
 
                     block_start_idx = end_idx
 
