@@ -7,6 +7,8 @@ import soundfile as sf
 
 import include.effects as effects
 
+SUPPORTED_FILE_TYPES = [".wav"] # TODO: figure out mp3 support
+
 class MAGE:
     # TODO: Set a keyboard interface
     def __init__(self):
@@ -21,17 +23,32 @@ class MAGE:
 
     # TODO: add file type checking
     def load_audio(self, filepath: str):
+        """
+            filepath: str
+
+            Checks if file type is supported before loading
+        """
         self.data, self.samplerate = sf.read(filepath)
         self.channels = self.data.shape[1] if len(self.data.shape) > 1 else 1
         info = sf.info(filepath)  # ? For metadata and showing a progress indicator (not yet implemented)
 
         print(f"{filepath} loaded")
 
-    # * Change Volume
-    def change_volume(self, volume:int):
-        self.volume = volume / 100
+    def change_volume(self, value):
+        """
+            volume: str (because the slider outputs a string for some reason?)
+
+            Changes the volume (this is NOT preamp gain)
+        """
+
+        self.volume = int(value) / 100
 
     def toggle_play_pause(self):
+        """
+            Toggle Play/Pause but if its the first time running, 
+            it creates a thread for audio playback
+        """
+
         if self.running == False:
             # Start the audio thread
             audio_thread = threading.Thread(target=self.audio_playback)
