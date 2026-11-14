@@ -1,5 +1,4 @@
 soundfile
 sounddevice
-pynput
 numpy
 librosa

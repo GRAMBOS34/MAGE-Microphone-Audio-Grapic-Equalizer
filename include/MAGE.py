@@ -26,14 +26,16 @@ class MAGE:
         # default to PipeWire but instead ALSA
         if platform.system() == "Linux":
             # ! For Linux only
+            # (Input, Output)
             sd.default.device = (None, "pipewire")
     
     # TODO: add file type checking
     def load_audio(self, filepath: str):
         """
-            filepath: str
-
             Checks if file type is supported before loading
+
+            Args:
+            filepath: str
         """
         self.data, self.samplerate = sf.read(filepath)
         self.channels = self.data.shape[1] if len(self.data.shape) > 1 else 1
@@ -43,9 +45,10 @@ class MAGE:
 
     def change_volume(self, value):
         """
-            volume: str (because the slider outputs a string for some reason?)
-
             Changes the volume (this is NOT preamp gain)
+
+            Args:
+            volume: str (because the slider outputs a string for some reason?)
         """
 
         self.volume = int(value) / 100
