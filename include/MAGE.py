@@ -11,7 +11,6 @@ import include.effects as effects
 SUPPORTED_FILE_TYPES = [".wav"] # TODO: figure out mp3 support
 
 class MAGE:
-    # TODO: Set a keyboard interface
     def __init__(self):
         self.running = False
         self.paused = False
@@ -74,14 +73,19 @@ class MAGE:
             print("Data not loaded")
             return
 
+        if not isinstance(self.samplerate, int):
+            print("Failed reading audio data")
+            return
+
         with sd.OutputStream(samplerate=self.samplerate, channels=self.channels) as stream:
             # TODO: figure out seeking
             # TODO: show where in the file it currently is
 
             blocksize = 1024
             block_start_idx = 0
-            try:
-                print("Playing audio...")
+
+            print("Playing audio...")
+            try: 
                 while self.running == True and block_start_idx < len(self.data):
                     # If paused, sleep briefly and skip writing audio chunks
                     if self.paused:
@@ -94,17 +98,23 @@ class MAGE:
                     # Had to convert to float32 since stream.write doesnt use float64
                     pre_effect_data_block = np.float32(self.data[block_start_idx:end_idx])
 
+                    effects_chain = effects.load_effects()
+
+                    data_block = effects.process_effects(pre_effect_data_block, self.samplerate, effects_chain)
+
                     # TODO: make it so that applying effects is actually on a different function
                     # like it can be added or removed pretty easily
-                    data_block = effects.high_pass_filter(pre_effect_data_block, self.samplerate, 400)
+                    # data_block = effects.high_pass_filter(pre_effect_data_block, self.samplerate, 400)
 
                     # ! Comment one out
-                    # stream.write(np.float32(data_block)) # HPF Applied
-                    stream.write(pre_effect_data_block * self.volume)  # No effect applied
+                    # stream.write(np.float32(data_block) * self.volume) # HPF Applied
+                    stream.write(np.float32(data_block) * self.volume)  # No effect applied
 
                     block_start_idx = end_idx
 
-            except KeyboardInterrupt:  # Ctrl + C on the console
-                self.running = False
+            except:
+                print("Playback interrupted") # For when the window is closed during playback
 
-            print("\nPlayback stopped.")
+            finally:
+                self.running = False
+                print("\nPlayback stopped.")
