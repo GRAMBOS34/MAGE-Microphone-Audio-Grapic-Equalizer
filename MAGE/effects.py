@@ -7,22 +7,27 @@ DEFAULT_EFFECTS_FILEPATH = "effects.json"
 
 # * --------------- EFFECTS IMPLEMENTATIONS ---------------------
 
-# * Copied from gemini cuz i had no time icl
-# ! This filter is basically a sharp drop at the cutoff
-# TODO: figure out how to add that rolloff at the end
+"""
+    Copied from gemini because I couldn't think of an alternative to the FFT I previously used
+    However, the comments below are explanations written in my own words
+
+    This implementation actually avoids the crackling noise caused by the STFT (Short-Time Fourier Transform) 
+    needs an overlap both forwards and backwards. This willnot be possible when a mic is used.
+
+    This solution actually modifies the signal in the time domain rather than the frequency domain
+"""
 def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
-    """
-    Click-free high-pass filter for live streaming using Second-Order Sections (SOS).
-    """
     gain = 0.1  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
-    # 1. Design a Butterworth high-pass filter (2nd order is usually plenty for basic HPF)
-    # sos shape: (n_sections, 6)
+    # Build a Butterworth filter, this basically builds the gain curve we want
+    # sos = Second-Order Sections (biquads)
+    # This is a digital biquad filter
     sos = signal.butter(N=2, Wn=cutoff, btype='high', fs=samplerate, output='sos')
 
-    # 2. Initialize or retrieve filter states (zi) for continuity across chunks
-    # sosfilt_zi maintains the filter's internal delay memory per section and channel
+    # Retrieve or initialize zi_state
+    # The zi state is used in the calculations of the biquad filter
+    # This allows us to keep the "momentum" of changes even on the next chunk
     if zi_state is None:
         # shape for sosfilt_zi: (n_sections, 2, n_channels)
         zi_state = signal.sosfilt_zi(sos)
@@ -32,6 +37,7 @@ def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_st
     processed_channels = []
     new_zi_states = []
 
+    # We now use the zi_state to filter the sos so we can get the signal we want
     for ch in range(n_channels):
         ch_data = data[:, ch]
         
@@ -56,6 +62,13 @@ def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_st
     return y_eq, new_zi_states
 
 def audio_gain(data:np.ndarray, gain:float = 0.1) -> np.ndarray:
+    """
+        Adjusts signal gain
+
+        Args:
+        data : np.ndarray - Audio data
+        gain : float = 0.1 - New audio gain
+    """
     audio_chunk = data * gain
 
     return audio_chunk
@@ -75,40 +88,36 @@ def load_effects(filepath:str = DEFAULT_EFFECTS_FILEPATH) -> dict[str, float | l
 
     return effects_chain
 
-"""
-    Format
-
-    Gain
-    "GAIN" : [gain]
-
-    HPF/LPF:
-    "HPF" : [cutoff]
-
-    Graphic Equalizer (not exactly sure of the spacing yet):
-    [freq, gain, Q]
-    "GEQ" : [[20, 0, 1], [50, 0, 1], [130, 0, 1], ..., [12000, 0, 1], [14000, 0, 1], [16600, 0, 1]]
-
-    ? consider having id's instead so that we can chain duplicates? idk though
-    ? like having PAG -> GEQ -> HPF -> PAG
-
-    The output fader is controlled in MAGE.audio_playback though
-"""
 def process_effects(
         audio_chunk, 
         samplerate:int,
-        effects_chain:dict[str, float | list[list[float]]], 
+        effects_chain:dict[str, float | list[list[float]]], # ! this 2d list is not final yet
         previous_zi_state:np.ndarray | None
 ) -> tuple[np.ndarray, np.ndarray | None]:
-    
-    # So we don't waste time on an empty array
-    if len(effects_chain) == 0:
-        return audio_chunk
+
+    """
+        Format
+
+        Gain
+        "GAIN" : [gain]
+
+        HPF/LPF:
+        "HPF" : [cutoff]
+
+        Graphic Equalizer (not exactly sure of the spacing yet):
+        [freq, gain, Q]
+        "GEQ" : [[20, 0, 1], [50, 0, 1], [130, 0, 1], ..., [12000, 0, 1], [14000, 0, 1], [16600, 0, 1]]
+
+        ? consider having id's instead so that we can chain duplicates? idk though
+        ? so we can have stuff like GAIN -> GEQ -> HPF -> GAIN even if it's not super ideal
+
+        The output fader is controlled in MAGE.audio_playback though
+    """
 
     current_audio_chunk = audio_chunk
 
     for effect in effects_chain:
         # * Apply gain
-        # * This is the first check so that it doesn't accidentally add gain on gain
         if effect == "GAIN":
             gain = effects_chain.get(effect)
 

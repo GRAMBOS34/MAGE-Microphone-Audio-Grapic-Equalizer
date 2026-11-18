@@ -1,9 +1,9 @@
 import tkinter as tk
 from tkinter import ttk
 
-import include.MAGE as Audio
+from MAGE import MAGE
 
-audioEngine = Audio.MAGE() # Load audio engine
+audioEngine = MAGE.AudioEngine() # Load audio engine
 
 file = "test_audio/wav/PlasticLove.wav"
 audioEngine.load_audio(file)

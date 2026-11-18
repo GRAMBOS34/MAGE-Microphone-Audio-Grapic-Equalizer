@@ -1,4 +1,3 @@
-import math
 import platform
 import time
 import threading
@@ -7,11 +6,9 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
-import include.effects as effects
+import effects
 
-SUPPORTED_FILE_TYPES = [".wav"] # TODO: figure out mp3 support
-
-class MAGE:
+class AudioEngine:
     def __init__(self):
         self.running = False
         self.paused = False
@@ -29,14 +26,18 @@ class MAGE:
             # (Input, Output)
             sd.default.device = (None, "pipewire")
     
-    # TODO: add file type checking
+    # ? reconsider the part where it just throws an error
     def load_audio(self, filepath: str):
         """
-            Checks if file type is supported before loading
+            Checks if file type is supported before loading and throws an error
+            if it is not supported
+
+            Different filetypes are automatically handled by soundfile
 
             Args:
             filepath: str
         """
+        
         self.data, self.samplerate = sf.read(filepath)
         self.channels = self.data.shape[1] if len(self.data.shape) > 1 else 1
         info = sf.info(filepath)  # ? For metadata and showing a progress indicator (not yet implemented)
@@ -88,6 +89,8 @@ class MAGE:
             print("Playing audio...")
             try: 
                 previous_zi_state = None
+                effects_chain = effects.load_effects() # loads effects before playback
+
                 while self.running == True and block_start_idx < len(self.data):
                     # If paused, sleep briefly and skip writing audio chunks
                     if self.paused:
@@ -101,8 +104,6 @@ class MAGE:
                     pre_effect_data_block = np.float32(self.data[block_start_idx:end_idx])
 
                     # * Appply effects
-                    effects_chain = effects.load_effects() # loads effects before playback
-
                     data_block, zi_state = effects.process_effects(pre_effect_data_block, self.samplerate, effects_chain, previous_zi_state)
 
                     stream.write(np.float32(data_block) * self.volume) 
@@ -111,7 +112,8 @@ class MAGE:
                     previous_zi_state = zi_state
 
             except:
-                # Bare execpt clause because it would segfault if the window was closed during audio playback
+                # ! Bare execpt clause because it would segfault if the window was closed during audio playback
+                # (i just didnt know what to write for the error)
                 print("Playback interrupted") # For when the window is closed during playback
 
             finally:
