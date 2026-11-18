@@ -1,4 +1,6 @@
-import tkinter as tk
+from typing import Tuple
+
+import customtkinter
 from tkinter import ttk
 
 from MAGE import MAGE
@@ -8,45 +10,84 @@ audioEngine = MAGE.AudioEngine() # Load audio engine
 file = "test_audio/wav/PlasticLove.wav"
 audioEngine.load_audio(file)
 
-# * WINDOW INITIALIZATION
-WINDOW_DIMENSIONS = "1000x600"
-root = tk.Tk()
-root.geometry(WINDOW_DIMENSIONS)
-root.resizable(False, False) # Keeps window fixed
-root.title("MAGE - Microphone and Audio Graphic Equalizer")
+customtkinter.set_appearance_mode("system")  
+customtkinter.set_default_color_theme("dark-blue")
 
-# * ----------------- PLAYBACK CONTROLS ------------------------
+class PlaybackControls(customtkinter.CTkFrame):
+    def __init__(self, master, width, height, fg_color):
+        super().__init__(master, width, height, fg_color=fg_color)
 
-PLAYBACK_BG_COLOR = "#55D2FF"
-playback_controls = tk.Frame(root, bg=PLAYBACK_BG_COLOR, padx=15, pady=15, width=400, height=200)
-playback_controls.pack(pady=20, padx=20, fill="none", side="bottom", anchor="e")
+        # * PLAY BUTTON
+        button_text = "Play"
+        if not audioEngine.paused:
+            button_text = "Pause"
 
-# * PLAY BUTTON
-play = tk.Button(playback_controls, text="Play Audio", padx=10, pady=5, command=audioEngine.toggle_play_pause)
-play.place(relx=0.5, rely=0.5, anchor="e")
+        self.playBtn = customtkinter.CTkButton(self, text="Play", command=self.toggle_play)
+        self.playBtn.place(relx=0.5, rely=0.5, anchor="e")
 
-# * VOLUME SLIDER 
-# ? It doesn't update in real-time though
-volume_slider = tk.Scale(
-    playback_controls, 
-    from_=100, 
-    to=0, 
-    orient="vertical",
-    command=audioEngine.change_volume,
-    length=150,
+        # * VOLUME SLIDER
+        self.volumeSlider = customtkinter.CTkSlider(
+            self,
+            from_=0, 
+            to=100, 
+            orientation="vertical",
+            command=audioEngine.change_volume
+        )
+        self.volumeSlider.place(relx=0.79, rely=0)
 
-    background="#FFFFFF",
+    def on_space_pressed(self, event):
+        self.toggle_play()
 
-    # Remove Border
-    bd=0, 
-    highlightthickness=0,
-    showvalue=False # Hides the value
-)
-volume_slider.place(relx=0.79, rely=0)
-volume_slider.set(50) # Set default value to 50%
+    def toggle_play(self):
+        audioEngine.toggle_play_pause()
 
-volume_label = tk.Label(playback_controls, text="Volume")
-volume_label.place(relx=0.75, rely=0.90)
+        if audioEngine.paused:
+            self.playBtn.configure(text="Play")
 
-root.bind("<space>", lambda event: play.invoke()) # Play Button Keybind
-root.mainloop()
+        else:
+            self.playBtn.configure(text="Pause")
+
+class WaveformVisualizer(customtkinter.CTkFrame):
+    def __init__(self, master, width, height, fg_color):
+        super().__init__(master, width, height, fg_color=fg_color)
+
+# Main App class
+# I did it like this mainly because the docs say so but honestly, I see why
+class MAGEApp(customtkinter.CTk):
+    def __init__(self, audioEngine:MAGE.AudioEngine):
+        super().__init__()
+        self.audioEngine = audioEngine
+
+        # * WINDOW INITIALIZATION
+        self.title("MAGE - Microphone and Audio Graphic Equalizer")
+        self.geometry("1000x600")
+        self.resizable(False, False) # Keeps window fixed
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+
+        # * ON WINDOW CLOSE
+        self.protocol("WM_DELETE_WINDOW", self.on_closing)
+
+        # * ----------------- PLAYBACK CONTROLS ------------------------
+        PLAYBACK_BG_COLOR = "#7F7F7F"
+        self.playback_controls = PlaybackControls(self, width=400, height=200, fg_color=PLAYBACK_BG_COLOR)
+        self.playback_controls.grid(row=3, column=3, padx=15, pady=15, sticky="sse")
+
+        # * ----------------- WAVEFORM VISUALIZER ------------------------
+        WAVE_BG_COLOR = "#FFFFFF"
+        self.waveform_visualizer = WaveformVisualizer(self, width=400, height=250, fg_color=WAVE_BG_COLOR)
+        self.waveform_visualizer.grid(row=0, column=0, padx=15, pady=15, sticky="nnw")
+
+    def on_closing(self):
+        """
+            Pauses the audio stream before closing the window.
+            This is to avoid segfaulting every time the window
+            is closed while audio is playing.
+        """
+        audioEngine.stop_engine()
+
+        self.destroy()
+
+if __name__ == "__main__":
+    app = MAGEApp(audioEngine)
+    app.mainloop()

@@ -1,6 +1,6 @@
 {
 	"effects_chain": {
-		"GAIN": 10,
+		"GAIN": 10.0,
 		"HPF": 300
 	}
 }

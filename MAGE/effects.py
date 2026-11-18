@@ -61,7 +61,7 @@ def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_st
 
     return y_eq, new_zi_states
 
-def audio_gain(data:np.ndarray, gain:float = 0.1) -> np.ndarray:
+def audio_gain(data:np.ndarray, gain:float) -> np.ndarray:
     """
         Adjusts signal gain
 
@@ -92,7 +92,7 @@ def process_effects(
         audio_chunk, 
         samplerate:int,
         effects_chain:dict[str, float | list[list[float]]], # ! this 2d list is not final yet
-        previous_zi_state:np.ndarray | None
+        previous_zi_state:np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray | None]:
 
     """

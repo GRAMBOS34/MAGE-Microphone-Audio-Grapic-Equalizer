@@ -6,7 +6,7 @@ import numpy as np
 import sounddevice as sd
 import soundfile as sf
 
-import effects
+import MAGE.effects as effects
 
 class AudioEngine:
     def __init__(self):
@@ -25,8 +25,16 @@ class AudioEngine:
             # ! For Linux only
             # (Input, Output)
             sd.default.device = (None, "pipewire")
+
+    def stop_engine(self):
+        """
+            Stop everything in order to avoid segfaulting
+        """
+        self.paused = True
+        self.running = False
+
+        time.sleep(0.05) # To really avoid segfaulting
     
-    # ? reconsider the part where it just throws an error
     def load_audio(self, filepath: str):
         """
             Checks if file type is supported before loading and throws an error
@@ -70,6 +78,8 @@ class AudioEngine:
         else:
             self.paused = not self.paused
 
+        print(f"Paused: {self.paused}")
+
     def audio_playback(self):
         if self.data is None:
             print("Data not loaded")
@@ -110,11 +120,6 @@ class AudioEngine:
                     
                     block_start_idx = end_idx  # switch index to the next chunk
                     previous_zi_state = zi_state
-
-            except:
-                # ! Bare execpt clause because it would segfault if the window was closed during audio playback
-                # (i just didnt know what to write for the error)
-                print("Playback interrupted") # For when the window is closed during playback
 
             finally:
                 self.running = False
