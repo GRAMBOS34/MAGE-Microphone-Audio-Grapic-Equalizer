@@ -17,13 +17,12 @@ DEFAULT_EFFECTS_FILEPATH = "effects.json"
     This solution actually modifies the signal in the time domain rather than the frequency domain
 """
 def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
-    gain = 0.1  # Keep between 0 and 1 to prevent clipping
+    gain = 0.7  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
     # Build a Butterworth filter, this basically builds the gain curve we want
-    # sos = Second-Order Sections (biquads)
-    # This is a digital biquad filter
-    sos = signal.butter(N=2, Wn=cutoff, btype='highpass', fs=samplerate, output='sos')
+    # sos = Sixth-Order Sections, two is too subtle 
+    sos = signal.butter(N=6, Wn=cutoff, btype='high', fs=samplerate, output='sos')
 
     # Retrieve or initialize zi_state
     # The zi state is used in the calculations of the biquad filter
@@ -62,11 +61,11 @@ def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_st
     return y_eq, new_zi_states
 
 def low_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 8000, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
-    gain = 0.1  # Keep between 0 and 1 to prevent clipping
+    gain = 0.7  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
     # Build a Butterworth filter, this basically builds the gain curve we want
-    sos = signal.butter(N=2, Wn=cutoff, btype='lowpass', fs=samplerate, output='sos')
+    sos = signal.butter(N=6, Wn=cutoff, btype='low', fs=samplerate, output='sos')
 
     # Retrieve or initialize zi_state
     if zi_state is None:
@@ -118,9 +117,15 @@ def audio_gain(data:np.ndarray, gain:float) -> np.ndarray:
 
 # TODO: Make function to modify the effects file
 
-def load_effects(filepath:str = DEFAULT_EFFECTS_FILEPATH) -> dict[str, float | list[list[float]]]:
+def load_effects(filepath:str = DEFAULT_EFFECTS_FILEPATH) -> dict:
     """
         Loads the effects file and saves the enabled effects
+
+        Args:
+            filepath: str - the effects.json filepath
+
+        Returns:
+            effects_chain:dict - the dictionary of enabled effects
     """
     effects_chain = {}
 
@@ -128,54 +133,32 @@ def load_effects(filepath:str = DEFAULT_EFFECTS_FILEPATH) -> dict[str, float | l
     with open(filepath, "r") as file:
         data = json.load(file)
 
-        effects_chain = data["enabled"]
+        effects_chain = data["effects_chain"]
 
     return effects_chain
-
-def enable_effect(effects_chain:dict, effect:str) -> dict[str, float | list[list[float]]]:
-    new_effects_chain = {}
-
-    return new_effects_chain
 
 def process_effects(
         audio_chunk, 
         samplerate:int,
-        effects_chain:dict[str, float | list[list[float]]], # ! this 2d list is not final yet
+        effects_chain:dict,
         previous_zi_state:np.ndarray | None = None
 ) -> tuple[np.ndarray, np.ndarray | None]:
-
-    """
-        Format
-
-        Gain
-        "GAIN" : [gain]
-
-        HPF/LPF:
-        "HPF" : [cutoff]
-
-        Graphic Equalizer (not exactly sure of the spacing yet):
-        [freq, gain, Q]
-        "GEQ" : [[20, 0, 1], [50, 0, 1], [130, 0, 1], ..., [12000, 0, 1], [14000, 0, 1], [16600, 0, 1]]
-
-        ? consider having id's instead so that we can chain duplicates? idk though
-        ? so we can have stuff like GAIN -> GEQ -> HPF -> GAIN even if it's not super ideal
-
-        The output fader is controlled in MAGE.audio_playback though
-    """
-
     current_audio_chunk = audio_chunk
 
     for effect in effects_chain:
+        entry = effects_chain[effect]
+        is_enabled = entry.get("enabled")
+
         # * Apply gain
-        if effect == "GAIN":
-            gain = effects_chain.get(effect)
+        if effect == "GAIN" and is_enabled:
+            gain = entry["properties"][0]
 
             if isinstance(gain, float):
                 current_audio_chunk = audio_gain(current_audio_chunk, gain)
 
         # * Apply High-Pass Filter
-        if effect == "HPF":
-            cutoff = effects_chain.get(effect)
+        if effect == "HPF" and is_enabled:
+            cutoff = entry["properties"][0]
 
             if isinstance(cutoff, int):
                 filtered_audio = high_pass_filter(current_audio_chunk, samplerate, cutoff, previous_zi_state)
@@ -183,8 +166,8 @@ def process_effects(
                 previous_zi_state = filtered_audio[1]
 
          # * Apply Low-Pass Filter
-        if effect == "LPF":
-            cutoff = effects_chain.get(effect)
+        if effect == "LPF" and is_enabled:
+            cutoff = entry["properties"][0]
 
             if isinstance(cutoff, int):
                 filtered_audio = low_pass_filter(current_audio_chunk, samplerate, cutoff, previous_zi_state)

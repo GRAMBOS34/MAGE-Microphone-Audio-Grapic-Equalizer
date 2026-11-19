@@ -18,6 +18,7 @@ class AudioEngine:
         self.samplerate = None
         self.channels = None
         self.volume = 0.5
+        self.effects_chain = effects.load_effects() # loads effects before playback
 
         # For the waveform visualizer
         self.data_block = None
@@ -28,6 +29,11 @@ class AudioEngine:
             # ! For Linux only
             # (Input, Output)
             sd.default.device = (None, "pipewire")
+
+    def toggle_enable_effect(self, effect_name:str) -> None:
+        is_enabled = self.effects_chain[effect_name]["enabled"]
+
+        self.effects_chain[effect_name]["enabled"] = not is_enabled
 
     def stop_engine(self):
         """
@@ -102,7 +108,6 @@ class AudioEngine:
             print("Playing audio...")
             try: 
                 previous_zi_state = None
-                effects_chain = effects.load_effects() # loads effects before playback
 
                 while self.running == True and block_start_idx < len(self.file_data):
                     # If paused, sleep briefly and skip writing audio chunks
@@ -117,7 +122,7 @@ class AudioEngine:
                     pre_effect_data_block = np.float32(self.file_data[block_start_idx:end_idx])
 
                     # * Appply effects
-                    self.data_block, zi_state = effects.process_effects(pre_effect_data_block, self.samplerate, effects_chain, previous_zi_state)
+                    self.data_block, zi_state = effects.process_effects(pre_effect_data_block, self.samplerate, self.effects_chain, previous_zi_state)
 
                     self.data_block = np.float32(self.data_block) * self.volume
                     

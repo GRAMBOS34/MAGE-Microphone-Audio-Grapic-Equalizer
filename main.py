@@ -66,27 +66,33 @@ class MAGEApp(customtkinter.CTk):
             self, 
             width=EFFECTS_PANELS_WIDTH, 
             height=EFFECTS_PANELS_HEIGHT, 
-            fg_color=GAIN_BG_COLOR
+            fg_color=GAIN_BG_COLOR,
+            audioEngine=audioEngine,
+            effect="GAIN"
         )
         self.gain_control.grid(row=1, column=0, padx=15, pady=15, sticky="n")
 
         # * ----------------- HIGH-PASS FILTER CONTROLS ------------------------
-        HPF_BG_COLOR = "#22E90C"
+        HPF_BG_COLOR = "#2b2b2b"
         self.HPF_control = ui_frames.EffectsControls(
             self, 
             width=EFFECTS_PANELS_WIDTH, 
             height=EFFECTS_PANELS_HEIGHT, 
-            fg_color=HPF_BG_COLOR
+            fg_color=HPF_BG_COLOR,
+            audioEngine=audioEngine,
+            effect="HPF"
         )
         self.HPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="w")
 
         # * ----------------- LOW-PASS FILTER CONTROLS ------------------------
-        LPF_BG_COLOR = "#22E90C"
+        LPF_BG_COLOR = "#FFFFFF"
         self.LPF_control = ui_frames.EffectsControls(
             self, 
             width=EFFECTS_PANELS_WIDTH, 
             height=EFFECTS_PANELS_HEIGHT, 
-            fg_color=LPF_BG_COLOR
+            fg_color=LPF_BG_COLOR,
+            audioEngine=audioEngine,
+            effect="LPF"
         )
         self.LPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="s")
 

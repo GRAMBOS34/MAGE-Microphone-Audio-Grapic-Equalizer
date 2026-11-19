@@ -131,5 +131,30 @@ class DeviceSelect(ctk.CTkFrame):
 
 # * Effects Controls Class
 class EffectsControls(ctk.CTkFrame):
-    def __init__(self, master, width, height, fg_color):
+    def __init__(self, master, width, height, fg_color, audioEngine:MAGE.AudioEngine, effect:str):
         super().__init__(master, width, height, fg_color=fg_color)
+        self.audioEngine = audioEngine
+        self.effect = effect
+
+        # * TOGGLE ENABLE BUTTON
+        self.toggle_enable_btn = ctk.CTkButton(self, text="Enable", command=self.toggle_enable)
+        self.toggle_enable_btn.place(relx=0.5, rely=0.5, anchor="e")
+
+    def toggle_enable(self):
+        """
+            Toggle the effect and change the text of the button
+        """
+        self.audioEngine.toggle_enable_effect
+
+        is_enabled = self.audioEngine.effects_chain[self.effect]["enabled"]
+        print(f"{self.effect} {is_enabled}")
+
+        if is_enabled:
+            self.toggle_enable_btn.configure(text="Enable")
+
+        else:
+            self.toggle_enable_btn.configure(text="Disable")
+
+        self.audioEngine.effects_chain[self.effect]["enabled"] = not is_enabled
+
+

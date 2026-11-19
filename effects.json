@@ -1,7 +1,12 @@
 {
 	"effects_chain": {
-		"enabled":{
-			
+		"HPF": {
+			"enabled": false,
+			"properties": [300]
+		},
+		"LPF": {
+			"enabled": false,
+			"properties": [7000]
 		}
 	}
 }
