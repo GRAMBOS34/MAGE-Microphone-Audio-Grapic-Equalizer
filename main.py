@@ -1,57 +1,16 @@
-from typing import Tuple
-
 import customtkinter
-from tkinter import ttk
 
-from MAGE import MAGE
+from MAGE import MAGE, ui_frames
 
 audioEngine = MAGE.AudioEngine() # Load audio engine
 
-file = "test_audio/wav/PlasticLove.wav"
+file = "test_audio/wav/ThankYouForTheVenom.wav"
 audioEngine.load_audio(file)
 
-customtkinter.set_appearance_mode("system")  
+customtkinter.set_appearance_mode("dark")  
 customtkinter.set_default_color_theme("dark-blue")
 
-class PlaybackControls(customtkinter.CTkFrame):
-    def __init__(self, master, width, height, fg_color):
-        super().__init__(master, width, height, fg_color=fg_color)
-
-        # * PLAY BUTTON
-        button_text = "Play"
-        if not audioEngine.paused:
-            button_text = "Pause"
-
-        self.playBtn = customtkinter.CTkButton(self, text="Play", command=self.toggle_play)
-        self.playBtn.place(relx=0.5, rely=0.5, anchor="e")
-
-        # * VOLUME SLIDER
-        self.volumeSlider = customtkinter.CTkSlider(
-            self,
-            from_=0, 
-            to=100, 
-            orientation="vertical",
-            command=audioEngine.change_volume
-        )
-        self.volumeSlider.place(relx=0.79, rely=0)
-
-    def on_space_pressed(self, event):
-        self.toggle_play()
-
-    def toggle_play(self):
-        audioEngine.toggle_play_pause()
-
-        if audioEngine.paused:
-            self.playBtn.configure(text="Play")
-
-        else:
-            self.playBtn.configure(text="Pause")
-
-class WaveformVisualizer(customtkinter.CTkFrame):
-    def __init__(self, master, width, height, fg_color):
-        super().__init__(master, width, height, fg_color=fg_color)
-
-# Main App class
+# * ----------------- MAIN APP CLASS ------------------------
 # I did it like this mainly because the docs say so but honestly, I see why
 class MAGEApp(customtkinter.CTk):
     def __init__(self, audioEngine:MAGE.AudioEngine):
@@ -60,7 +19,7 @@ class MAGEApp(customtkinter.CTk):
 
         # * WINDOW INITIALIZATION
         self.title("MAGE - Microphone and Audio Graphic Equalizer")
-        self.geometry("1000x600")
+        self.geometry("1200x600")
         self.resizable(False, False) # Keeps window fixed
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -68,15 +27,79 @@ class MAGEApp(customtkinter.CTk):
         # * ON WINDOW CLOSE
         self.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        # * ----------------- PLAYBACK CONTROLS ------------------------
-        PLAYBACK_BG_COLOR = "#7F7F7F"
-        self.playback_controls = PlaybackControls(self, width=400, height=200, fg_color=PLAYBACK_BG_COLOR)
-        self.playback_controls.grid(row=3, column=3, padx=15, pady=15, sticky="sse")
-
         # * ----------------- WAVEFORM VISUALIZER ------------------------
         WAVE_BG_COLOR = "#FFFFFF"
-        self.waveform_visualizer = WaveformVisualizer(self, width=400, height=250, fg_color=WAVE_BG_COLOR)
+        self.waveform_visualizer = ui_frames.WaveformVisualizer(
+            self, 
+            width=400, 
+            height=250, 
+            fg_color=WAVE_BG_COLOR, 
+            audioEngine=audioEngine
+        )
         self.waveform_visualizer.grid(row=0, column=0, padx=15, pady=15, sticky="nnw")
+
+        # * ----------------- INPUT DEVICE SELECT ------------------------
+        INPUT_SELECT_BG_COLOR = "#DC1515"
+        self.input_device_select = ui_frames.DeviceSelect(
+            self, 
+            width=200, 
+            height=275, 
+            fg_color=INPUT_SELECT_BG_COLOR
+        )
+        self.input_device_select.grid(row=0, column=1, padx=15, pady=15, sticky="n")
+
+        # * ----------------- OUTPUT DEVICE SELECT ------------------------
+        OUTPUT_SELECT_BG_COLOR = "#2b2b2b"
+        self.output_device_select = ui_frames.DeviceSelect(
+            self, 
+            width=200, 
+            height=275, 
+            fg_color=OUTPUT_SELECT_BG_COLOR
+        )
+        self.output_device_select.grid(row=1, column=1, padx=15, pady=15, sticky="s")
+
+        EFFECTS_PANELS_WIDTH = 600
+        EFFECTS_PANELS_HEIGHT = 80
+        # * ----------------- GAIN CONTROLS ------------------------
+        GAIN_BG_COLOR = "#22E90C"
+        self.gain_control = ui_frames.EffectsControls(
+            self, 
+            width=EFFECTS_PANELS_WIDTH, 
+            height=EFFECTS_PANELS_HEIGHT, 
+            fg_color=GAIN_BG_COLOR
+        )
+        self.gain_control.grid(row=1, column=0, padx=15, pady=15, sticky="n")
+
+        # * ----------------- HIGH-PASS FILTER CONTROLS ------------------------
+        HPF_BG_COLOR = "#22E90C"
+        self.HPF_control = ui_frames.EffectsControls(
+            self, 
+            width=EFFECTS_PANELS_WIDTH, 
+            height=EFFECTS_PANELS_HEIGHT, 
+            fg_color=HPF_BG_COLOR
+        )
+        self.HPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="w")
+
+        # * ----------------- LOW-PASS FILTER CONTROLS ------------------------
+        LPF_BG_COLOR = "#22E90C"
+        self.LPF_control = ui_frames.EffectsControls(
+            self, 
+            width=EFFECTS_PANELS_WIDTH, 
+            height=EFFECTS_PANELS_HEIGHT, 
+            fg_color=LPF_BG_COLOR
+        )
+        self.LPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="s")
+
+        # * ----------------- PLAYBACK CONTROLS ------------------------
+        PLAYBACK_BG_COLOR = "#7F7F7F"
+        self.playback_controls = ui_frames.PlaybackControls(
+            self, 
+            width=400, 
+            height=275, 
+            fg_color=PLAYBACK_BG_COLOR, 
+            audioEngine=audioEngine
+        )
+        self.playback_controls.grid(row=1, column=2, padx=15, pady=15, sticky="sse")
 
     def on_closing(self):
         """
@@ -85,6 +108,7 @@ class MAGEApp(customtkinter.CTk):
             is closed while audio is playing.
         """
         audioEngine.stop_engine()
+        self.waveform_visualizer.stop_loop()
 
         self.destroy()
 

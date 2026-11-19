@@ -14,10 +14,13 @@ class AudioEngine:
         self.paused = False
 
         # Audio Data
-        self.data = None
+        self.file_data = None
         self.samplerate = None
         self.channels = None
         self.volume = 0.5
+
+        # For the waveform visualizer
+        self.data_block = None
 
         # This may have been unique to my system but it didn't
         # default to PipeWire but instead ALSA
@@ -46,8 +49,8 @@ class AudioEngine:
             filepath: str
         """
         
-        self.data, self.samplerate = sf.read(filepath)
-        self.channels = self.data.shape[1] if len(self.data.shape) > 1 else 1
+        self.file_data, self.samplerate = sf.read(filepath)
+        self.channels = self.file_data.shape[1] if len(self.file_data.shape) > 1 else 1
         info = sf.info(filepath)  # ? For metadata and showing a progress indicator (not yet implemented)
 
         print(f"{filepath} loaded")
@@ -81,7 +84,7 @@ class AudioEngine:
         print(f"Paused: {self.paused}")
 
     def audio_playback(self):
-        if self.data is None:
+        if self.file_data is None:
             print("Data not loaded")
             return
 
@@ -101,22 +104,24 @@ class AudioEngine:
                 previous_zi_state = None
                 effects_chain = effects.load_effects() # loads effects before playback
 
-                while self.running == True and block_start_idx < len(self.data):
+                while self.running == True and block_start_idx < len(self.file_data):
                     # If paused, sleep briefly and skip writing audio chunks
                     if self.paused:
                         time.sleep(0.1)
                         continue
 
                     # Write a chunk of audio
-                    end_idx = min(block_start_idx + blocksize, len(self.data))
+                    end_idx = min(block_start_idx + blocksize, len(self.file_data))
 
                     # Had to convert to float32 since stream.write doesnt use float64
-                    pre_effect_data_block = np.float32(self.data[block_start_idx:end_idx])
+                    pre_effect_data_block = np.float32(self.file_data[block_start_idx:end_idx])
 
                     # * Appply effects
-                    data_block, zi_state = effects.process_effects(pre_effect_data_block, self.samplerate, effects_chain, previous_zi_state)
+                    self.data_block, zi_state = effects.process_effects(pre_effect_data_block, self.samplerate, effects_chain, previous_zi_state)
 
-                    stream.write(np.float32(data_block) * self.volume) 
+                    self.data_block = np.float32(self.data_block) * self.volume
+                    
+                    stream.write(self.data_block) 
                     
                     block_start_idx = end_idx  # switch index to the next chunk
                     previous_zi_state = zi_state
