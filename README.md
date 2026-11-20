@@ -24,16 +24,24 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Libraries Used
+## Built With
 
-(properly cite them)
-soundfile
-sounddevice
-numpy
-scipy
-librosa
+- [Librosa](https://github.com/librosa/librosa)
+- [Numpy](https://numpy.org/)
+- [Scipy](https://docs.scipy.org/doc/scipy/#)
+- [Soundfile](https://pypi.org/project/soundfile/)
+- [Sounddevice](https://pypi.org/project/sounddevice/)
 
-## AI-Use Disclaimer
+## Declaration of Generative AI and AI-Assisted Technologies
 
-(draft)
-I decided on these libraries mainly through the use of AI, but I am the one who wrote the logic using them. For the functions which I have decided to use AI to write them, I have studied them myself and I have modified others to suit my needs.
+During the preparation of this work, the author used Google Gemini for the following
+reasons:
+
+- Debugging
+- Creating the filters (_Low-Pass, High-Pass, Graphical EQ_)
+
+After using this tool, the author reviewed and edited the content as needed and take(s) full responsibility for the content of the publication.
+
+## Known Issues
+
+1. When using the Low-Pass and High-Pass filters together, popping or hissing sounds appear (This may be related to the zi_states of each filter fighting each other)
