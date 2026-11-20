@@ -52,7 +52,7 @@ class AudioEngine:
             Different filetypes are automatically handled by soundfile
 
             Args:
-            filepath: str
+            filepath: str - Filepath to the audio file itself
         """
         
         self.file_data, self.samplerate = sf.read(filepath)
@@ -107,7 +107,6 @@ class AudioEngine:
 
             print("Playing audio...")
             try: 
-                previous_zi_state = None
 
                 while self.running == True and block_start_idx < len(self.file_data):
                     # If paused, sleep briefly and skip writing audio chunks
@@ -122,14 +121,13 @@ class AudioEngine:
                     pre_effect_data_block = np.float32(self.file_data[block_start_idx:end_idx])
 
                     # * Appply effects
-                    self.data_block, zi_state = effects.process_effects(pre_effect_data_block, self.samplerate, self.effects_chain, previous_zi_state)
+                    self.data_block= effects.process_effects(pre_effect_data_block, self.samplerate, self.effects_chain)
 
                     self.data_block = np.float32(self.data_block) * self.volume
                     
                     stream.write(self.data_block) 
                     
                     block_start_idx = end_idx  # switch index to the next chunk
-                    previous_zi_state = zi_state
 
             finally:
                 self.running = False

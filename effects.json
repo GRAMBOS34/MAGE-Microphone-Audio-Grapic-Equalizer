@@ -2,11 +2,17 @@
 	"effects_chain": {
 		"HPF": {
 			"enabled": false,
-			"properties": [300]
+			"properties": [300],
+			"previous_zi_state": null
 		},
 		"LPF": {
 			"enabled": false,
-			"properties": [7000]
+			"properties": [7000],
+			"previous_zi_state": null
+		},
+		"GAIN": {
+			"enabled": false,
+			"properties": [2]
 		}
 	}
 }

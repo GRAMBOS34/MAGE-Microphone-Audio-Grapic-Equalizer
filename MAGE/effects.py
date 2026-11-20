@@ -16,7 +16,7 @@ DEFAULT_EFFECTS_FILEPATH = "effects.json"
 
     This solution actually modifies the signal in the time domain rather than the frequency domain
 """
-def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
+def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: float = 300.0, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
     gain = 0.7  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
@@ -60,7 +60,7 @@ def high_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 300, zi_st
 
     return y_eq, new_zi_states
 
-def low_pass_filter(data: np.ndarray, samplerate: int, cutoff: int = 8000, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
+def low_pass_filter(data: np.ndarray, samplerate: int, cutoff: float = 8000.0, zi_state=None) -> tuple[np.ndarray, np.ndarray]:
     gain = 0.7  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
@@ -140,9 +140,8 @@ def load_effects(filepath:str = DEFAULT_EFFECTS_FILEPATH) -> dict:
 def process_effects(
         audio_chunk, 
         samplerate:int,
-        effects_chain:dict,
-        previous_zi_state:np.ndarray | None = None
-) -> tuple[np.ndarray, np.ndarray | None]:
+        effects_chain:dict
+) -> np.ndarray:
     current_audio_chunk = audio_chunk
 
     for effect in effects_chain:
@@ -159,19 +158,21 @@ def process_effects(
         # * Apply High-Pass Filter
         if effect == "HPF" and is_enabled:
             cutoff = entry["properties"][0]
+            previous_zi_state = entry["previous_zi_state"]
 
-            if isinstance(cutoff, int):
+            if isinstance(cutoff, float):
                 filtered_audio = high_pass_filter(current_audio_chunk, samplerate, cutoff, previous_zi_state)
                 current_audio_chunk = filtered_audio[0]
-                previous_zi_state = filtered_audio[1]
+                entry["previous_zi_state"] = filtered_audio[1]
 
          # * Apply Low-Pass Filter
         if effect == "LPF" and is_enabled:
             cutoff = entry["properties"][0]
+            previous_zi_state = entry["previous_zi_state"]
 
-            if isinstance(cutoff, int):
+            if isinstance(cutoff, float):
                 filtered_audio = low_pass_filter(current_audio_chunk, samplerate, cutoff, previous_zi_state)
                 current_audio_chunk = filtered_audio[0]
-                previous_zi_state = filtered_audio[1]
+                entry["previous_zi_state"] = filtered_audio[1]
 
-    return current_audio_chunk, previous_zi_state
+    return current_audio_chunk

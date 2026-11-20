@@ -41,7 +41,3 @@ reasons:
 - Creating the filters (_Low-Pass, High-Pass, Graphical EQ_)
 
 After using this tool, the author reviewed and edited the content as needed and take(s) full responsibility for the content of the publication.
-
-## Known Issues
-
-1. When using the Low-Pass and High-Pass filters together, popping or hissing sounds appear (This may be related to the zi_states of each filter fighting each other)

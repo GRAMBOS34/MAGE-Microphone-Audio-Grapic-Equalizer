@@ -40,7 +40,7 @@ class MAGEApp(customtkinter.CTk):
 
         # * ----------------- INPUT DEVICE SELECT ------------------------
         INPUT_SELECT_BG_COLOR = "#DC1515"
-        self.input_device_select = ui_frames.DeviceSelect(
+        self.input_device_select = ui_frames.InputDeviceSelect(
             self, 
             width=200, 
             height=275, 
@@ -48,9 +48,20 @@ class MAGEApp(customtkinter.CTk):
         )
         self.input_device_select.grid(row=0, column=1, padx=15, pady=15, sticky="n")
 
+        # * ----------------- GRAPHICAL EQUALIZER ------------------------
+        GRAPHIC_EQ_BG_COLOR = "#F6FF00"
+        self.graphic_equalizer = ui_frames.GraphicEqualizer(
+            self,
+            width=400,
+            height=275,
+            fg_color=GRAPHIC_EQ_BG_COLOR
+        )
+        self.graphic_equalizer.grid(row=0, column=2, padx=15, pady=15, sticky="e")
+
+
         # * ----------------- OUTPUT DEVICE SELECT ------------------------
-        OUTPUT_SELECT_BG_COLOR = "#2b2b2b"
-        self.output_device_select = ui_frames.DeviceSelect(
+        OUTPUT_SELECT_BG_COLOR = "#00ff55"
+        self.output_device_select = ui_frames.OutputDeviceSelect(
             self, 
             width=200, 
             height=275, 
@@ -61,7 +72,7 @@ class MAGEApp(customtkinter.CTk):
         EFFECTS_PANELS_WIDTH = 600
         EFFECTS_PANELS_HEIGHT = 80
         # * ----------------- GAIN CONTROLS ------------------------
-        GAIN_BG_COLOR = "#22E90C"
+        GAIN_BG_COLOR = "#2b2b2b"
         self.gain_control = ui_frames.EffectsControls(
             self, 
             width=EFFECTS_PANELS_WIDTH, 
@@ -85,7 +96,7 @@ class MAGEApp(customtkinter.CTk):
         self.HPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="w")
 
         # * ----------------- LOW-PASS FILTER CONTROLS ------------------------
-        LPF_BG_COLOR = "#FFFFFF"
+        LPF_BG_COLOR = "#2b2b2b"
         self.LPF_control = ui_frames.EffectsControls(
             self, 
             width=EFFECTS_PANELS_WIDTH, 
@@ -97,7 +108,7 @@ class MAGEApp(customtkinter.CTk):
         self.LPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="s")
 
         # * ----------------- PLAYBACK CONTROLS ------------------------
-        PLAYBACK_BG_COLOR = "#7F7F7F"
+        PLAYBACK_BG_COLOR = "#d900ff"
         self.playback_controls = ui_frames.PlaybackControls(
             self, 
             width=400, 
@@ -114,9 +125,9 @@ class MAGEApp(customtkinter.CTk):
             is closed while audio is playing.
         """
         audioEngine.stop_engine()
-        self.waveform_visualizer.stop_loop()
+        self.waveform_visualizer.stop_loop() # Stop calculating the waveform before closing
 
-        self.destroy()
+        self.destroy() # Close the window
 
 if __name__ == "__main__":
     app = MAGEApp(audioEngine)
