@@ -129,7 +129,7 @@ class WaveformVisualizer(ctk.CTkFrame):
             self.after_cancel(self._after_id)
             self._after_id = None
 
-# ? I took this from the spinbox example of the docs
+# ? I took this from the spinbox example of the customtkinter docs
 class FloatSpinbox(ctk.CTkFrame):
     def __init__(self, *args,
                  width: int = 100,
@@ -226,6 +226,10 @@ class FloatSpinbox(ctk.CTkFrame):
     def set(self, value: float):
         self.entry.delete(0, "end")
         self.entry.insert(0, str(float(value)))
+
+class EQSlider(ctk.CTkFrame):
+    def __init__(self, master, width, height, affected_freq:float, Q_val: float):
+        super().__init__(master, width, height)
 
 # * Graphic Equalizer Class
 class GraphicEqualizer(ctk.CTkFrame):

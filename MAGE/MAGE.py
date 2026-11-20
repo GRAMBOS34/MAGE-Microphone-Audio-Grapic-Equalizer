@@ -42,6 +42,8 @@ class AudioEngine:
         self.paused = True
         self.running = False
 
+        effects.save_effects(self.effects_chain)
+
         time.sleep(0.05) # To really avoid segfaulting
     
     def load_audio(self, filepath: str):
