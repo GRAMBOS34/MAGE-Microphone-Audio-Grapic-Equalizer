@@ -240,7 +240,7 @@ def save_effects(effects_chain:dict, filepath:str = DEFAULT_EFFECTS_FILEPATH):
             if effect == "GAIN": continue
 
             # ! This is honestly a pretty lazy fix
-            # ! Because in some its a list, others its an ndarray
+            # ! Because in some its a list, others its an ndarray?
             try:
                 formatted_effects_chain[effect]["previous_zi_state"] = effects_chain[effect]["previous_zi_state"].tolist()
             except:
