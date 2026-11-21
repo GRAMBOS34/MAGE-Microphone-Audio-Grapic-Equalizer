@@ -31,6 +31,14 @@ python main.py
 - [Soundfile](https://pypi.org/project/soundfile/)
 - [Sounddevice](https://pypi.org/project/sounddevice/)
 
+## Music Used
+
+- **Dani California** - Red Hot Chilli Peppers
+- **Dracula** - Tame Impala
+- **Fly Away** - yama
+- **Plastic Love** - Mariya Takeuchi
+- **Thank You For the Venom** - My Chemical Romance
+
 ## Declaration of Generative AI and AI-Assisted Technologies
 
 During the preparation of this work, the author used Google Gemini for the following
