@@ -19,7 +19,7 @@ class MAGEApp(customtkinter.CTk):
 
         # * WINDOW INITIALIZATION
         self.title("MAGE - Microphone and Audio Graphic Equalizer")
-        self.geometry("1200x600")
+        self.geometry("1500x600")
         self.resizable(False, False) # Keeps window fixed
         self.grid_columnconfigure(0, weight=1)
         self.grid_rowconfigure(0, weight=1)
@@ -39,25 +39,26 @@ class MAGEApp(customtkinter.CTk):
         self.waveform_visualizer.grid(row=0, column=0, padx=15, pady=15, sticky="nnw")
 
         # * ----------------- INPUT DEVICE SELECT ------------------------
-        INPUT_SELECT_BG_COLOR = "#DC1515"
+        INPUT_SELECT_BG_COLOR = "#2b2b2b"
         self.input_device_select = ui_frames.InputDeviceSelect(
             self, 
             width=200, 
             height=275, 
-            fg_color=INPUT_SELECT_BG_COLOR
+            fg_color=INPUT_SELECT_BG_COLOR,
+            audioEngine=audioEngine
         )
         self.input_device_select.grid(row=0, column=1, padx=15, pady=15, sticky="n")
 
         # * ----------------- GRAPHICAL EQUALIZER ------------------------
-        GRAPHIC_EQ_BG_COLOR = "#F6FF00"
+        GRAPHIC_EQ_BG_COLOR = "#2b2b2b"
         self.graphic_equalizer = ui_frames.GraphicEqualizer(
             self,
-            width=400,
-            height=275,
-            fg_color=GRAPHIC_EQ_BG_COLOR
+            width=640,
+            height=315,
+            fg_color=GRAPHIC_EQ_BG_COLOR,
+            audioEngine=audioEngine
         )
-        self.graphic_equalizer.grid(row=0, column=2, padx=15, pady=15, sticky="e")
-
+        self.graphic_equalizer.grid(row=0, column=2, padx=15, pady=(15, 0), sticky="e")
 
         # * ----------------- OUTPUT DEVICE SELECT ------------------------
         OUTPUT_SELECT_BG_COLOR = "#00ff55"
@@ -111,7 +112,7 @@ class MAGEApp(customtkinter.CTk):
         PLAYBACK_BG_COLOR = "#d900ff"
         self.playback_controls = ui_frames.PlaybackControls(
             self, 
-            width=400, 
+            width=640, 
             height=275, 
             fg_color=PLAYBACK_BG_COLOR, 
             audioEngine=audioEngine

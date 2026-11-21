@@ -228,20 +228,143 @@ class FloatSpinbox(ctk.CTkFrame):
         self.entry.insert(0, str(float(value)))
 
 class EQSlider(ctk.CTkFrame):
-    def __init__(self, master, width, height, affected_freq:float, Q_val: float):
-        super().__init__(master, width, height)
+    def __init__(self, master, channel:list[float], height, audioEngine:MAGE.AudioEngine, index, width=40):
+        super().__init__(master, width, height, corner_radius=0)
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_propagate(False) # Keep size fixed
+        self.index = index
+
+        FREQ_INDEX = 0
+        GAIN_INDEX = 1
+        Q_INDEX = 2
+
+        self.audioEngine = audioEngine
+        self.affected_freq = channel[FREQ_INDEX]
+        self.gain = channel[GAIN_INDEX]
+        self.Q_val = channel[Q_INDEX]
+
+        self.gain_slider = ctk.CTkSlider(
+            self,
+            width=20,
+            from_=-50, 
+            to=20,
+            command=self.adjust_gain,
+            orientation="vertical",
+        )
+        self.gain_slider.grid(row=0, column=0, padx=0, pady=5, sticky="n")
+
+        """
+            Ideally self.affected_freq and self.q_setting would be using CTkEntry
+            so that these can be modified during runtime, but I didn't have time to 
+            do that so for now this is how it is
+        """
+        self.affected_freq = ctk.CTkLabel(
+            self,
+            text_color="#FFFFFF", 
+            width=40, 
+            text=self._format_freq(self.affected_freq),
+            font=("JetBrains Mono", 12) # (font, font size)
+        )
+        self.affected_freq.grid(row=1, column=0, padx=0, pady=10, sticky="n")
+
+        self.q_setting = ctk.CTkLabel(
+            self,
+            text_color="#FFFFFF", 
+            width=40, 
+            text=str(self.Q_val),
+            font=("JetBrains Mono", 12) # (font, font size)
+        )
+        self.q_setting.grid(row=2, column=0, padx=0, pady=5, sticky="n")
+
+    def adjust_gain(self, gain_value:float):
+        self.audioEngine.effects_chain["GEQ"]["properties"][self.index][1] = gain_value
+
+    def _format_freq(self, value: float) -> str:
+        if value >= 1000:
+            k_val = value / 1000
+            # Drop ".0" for whole thousands like 10000 -> "10k", keep decimals like 1250 -> "1.25k"
+            formatted = f"{k_val:g}"
+            return f"{formatted}k"
+        return f"{value:g}"
 
 # * Graphic Equalizer Class
 class GraphicEqualizer(ctk.CTkFrame):
-    def __init__(self, master, width, height, fg_color):
+    def __init__(self, master, width, height, fg_color, audioEngine:MAGE.AudioEngine):
         super().__init__(master, width, height, fg_color=fg_color)
+        self.grid_rowconfigure(0, weight=1)
+        self.grid_propagate(False) # Keep size fixed
+
+        self.audioEngine = audioEngine
+
+        self.sliders = []
+        self.GEQ_properties = self.audioEngine.effects_chain["GEQ"]["properties"]
+
+        self.frame_height = height
+
+        for col_index, channel in enumerate(self.GEQ_properties):
+            self.grid_columnconfigure(col_index, weight=0)
+            slider = EQSlider(
+                self,
+                channel=channel,
+                audioEngine=audioEngine,
+                index=col_index,
+                height=self.frame_height
+            )
+            slider.grid(row=0, column=col_index, padx=0, pady=0, sticky="ns")
+            self.sliders.append(slider)
 
 # * Input Device Select Class
 class InputDeviceSelect(ctk.CTkFrame):
-    def __init__(self, master, width, height, fg_color):
+    def __init__(self, master, width, height, fg_color, audioEngine:MAGE.AudioEngine):
         super().__init__(master, width, height, fg_color=fg_color)
 
-        self.effect_control = FloatSpinbox(self)
+        self.label = ctk.CTkLabel(
+            self,
+            text_color="#FFFFFF", 
+            width=40, 
+            text="Input",
+            font=("JetBrains Mono", 20) # (font, font size)
+        )
+        self.label.place(relx=0.5, rely=0.05, anchor="n")
+
+        self.options = ctk.CTkSegmentedButton(
+            self,
+            values=["File", "Mic Input"],
+            command=self._on_option_change
+        )
+        self.options.place(relx=0.5, rely=0.2, anchor="n")
+
+        # File path input (shown when "File" is selected)
+        self.file_entry = ctk.CTkEntry(
+            self,
+            placeholder_text="Enter file path...",
+            width=width-20,
+            font=("JetBrains Mono", 12),
+        )
+
+        inputDevices = audioEngine.list_input_devices()
+
+        # Mic dropdown (shown when "Mic Input" is selected)
+        self.mic_dropdown = ctk.CTkOptionMenu(
+            self,
+            values=inputDevices,
+            width=width-20,
+            dynamic_resizing=False,
+            font=("JetBrains Mono", 12),
+        )
+
+        # Set default value and sync visibility on startup
+        self.options.set("File")
+        self._on_option_change("File")
+
+    def _on_option_change(self, selected_value: str):
+        if selected_value == "File":
+            self.mic_dropdown.place_forget()
+            self.file_entry.place(relx=0.5, rely=0.35, anchor="n")
+        elif selected_value == "Mic Input":
+            self.file_entry.place_forget()
+            self.mic_dropdown.place(relx=0.5, rely=0.35, anchor="n")
 
 # * Output Device Select Class
 class OutputDeviceSelect(ctk.CTkFrame):

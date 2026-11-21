@@ -45,6 +45,16 @@ class AudioEngine:
         effects.save_effects(self.effects_chain)
 
         time.sleep(0.05) # To really avoid segfaulting
+
+    def list_input_devices(self):
+        devices = sd.query_devices()
+        input_devices = []
+
+        for idx, dev in enumerate(devices):
+            if dev["max_input_channels"] > 0:
+                input_devices.append(dev["name"])
+
+        return input_devices
     
     def load_audio(self, filepath: str):
         """
@@ -122,8 +132,8 @@ class AudioEngine:
                     # Had to convert to float32 since stream.write doesnt use float64
                     pre_effect_data_block = np.float32(self.file_data[block_start_idx:end_idx])
 
-                    # * Appply effects
-                    self.data_block= effects.process_effects(pre_effect_data_block, self.samplerate, self.effects_chain)
+                    # * Apply effects
+                    self.data_block = effects.process_effects(pre_effect_data_block, self.samplerate, self.effects_chain)
 
                     self.data_block = np.float32(self.data_block) * self.volume
                     

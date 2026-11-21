@@ -225,15 +225,26 @@ def load_effects(filepath:str = DEFAULT_EFFECTS_FILEPATH) -> dict:
 
     return effects_chain
 
-# TODO: finish this
 def save_effects(effects_chain:dict, filepath:str = DEFAULT_EFFECTS_FILEPATH):
+    """
+        Writes effects to the effects.json
+
+        Args:
+            effects_chain:dict - the current effects chain
+            filepath:str - filepath of the effects.json
+    """
     with open(filepath, "r+") as file:
         formatted_effects_chain = effects_chain
 
         for effect in effects_chain:
             if effect == "GAIN": continue
 
-            formatted_effects_chain[effect]["previous_zi_state"] = effects_chain[effect]["previous_zi_state"].tolist()
+            # ! This is honestly a pretty lazy fix
+            # ! Because in some its a list, others its an ndarray
+            try:
+                formatted_effects_chain[effect]["previous_zi_state"] = effects_chain[effect]["previous_zi_state"].tolist()
+            except:
+                formatted_effects_chain[effect]["previous_zi_state"] = effects_chain[effect]["previous_zi_state"]
         
         new_effects = json.dumps(formatted_effects_chain, indent=4)
 
