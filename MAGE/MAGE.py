@@ -23,8 +23,6 @@ class AudioEngine:
         # For the waveform visualizer
         self.data_block = None
 
-        self.mic_used = ""
-
         # This may have been unique to my system but it didn't
         # default to PipeWire but instead ALSA
         if platform.system() == "Linux":
@@ -48,16 +46,6 @@ class AudioEngine:
 
         time.sleep(0.05) # To really avoid segfaulting
 
-    def list_input_devices(self):
-        devices = sd.query_devices()
-        input_devices = []
-
-        for idx, dev in enumerate(devices):
-            if dev["max_input_channels"] > 0:
-                input_devices.append(dev["name"])
-
-        return input_devices
-    
     def load_audio(self, filepath: str):
         """
             Checks if file type is supported before loading and throws an error

@@ -164,7 +164,7 @@ def graphical_eq(
         samplerate: int, 
         properties_list: list[list[float]],
         previous_zi_state: np.ndarray | None = None
-    ):
+    ) -> tuple[np.ndarray, np.ndarray]:
     """
         Properties List format:
         properties_list = [
@@ -233,7 +233,7 @@ def save_effects(effects_chain:dict, filepath:str = DEFAULT_EFFECTS_FILEPATH):
             effects_chain:dict - the current effects chain
             filepath:str - filepath of the effects.json
     """
-    with open(filepath, "r+") as file:
+    with open(filepath, "w+") as file:
         formatted_effects_chain = effects_chain
 
         for effect in effects_chain:
