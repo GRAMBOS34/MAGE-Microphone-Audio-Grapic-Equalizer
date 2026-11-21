@@ -386,6 +386,7 @@ class InputDeviceSelect(ctk.CTkFrame):
         print(self.file_entry.get())
         self.audioEngine.load_audio(self.file_entry.get())
 
+# ! Scrapped cuz I ran out of time
 class OutputDeviceSelect(ctk.CTkFrame):
     def __init__(self, master, width, height, fg_color):
         super().__init__(master, width, height, fg_color=fg_color)
