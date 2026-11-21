@@ -26,7 +26,6 @@ python main.py
 
 ## Built With
 
-- [Librosa](https://github.com/librosa/librosa)
 - [Numpy](https://numpy.org/)
 - [Scipy](https://docs.scipy.org/doc/scipy/#)
 - [Soundfile](https://pypi.org/project/soundfile/)
