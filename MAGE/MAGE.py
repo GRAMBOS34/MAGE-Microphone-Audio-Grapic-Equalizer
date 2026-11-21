@@ -31,6 +31,10 @@ class AudioEngine:
             sd.default.device = (None, "pipewire")
 
     def toggle_enable_effect(self, effect_name:str) -> None:
+        """
+            Toggles the "enabled" status of a specified effect
+        """
+        
         is_enabled = self.effects_chain[effect_name]["enabled"]
 
         self.effects_chain[effect_name]["enabled"] = not is_enabled
@@ -91,6 +95,9 @@ class AudioEngine:
         print(f"Paused: {self.paused}")
 
     def audio_playback(self):
+        """
+            Processes audio playback and effects and outputs to the output device
+        """
         if self.file_data is None:
             print("Data not loaded")
             return
