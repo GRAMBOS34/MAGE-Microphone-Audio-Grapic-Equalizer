@@ -22,7 +22,6 @@ def high_pass_filter(
         cutoff: float = 300.0, 
         zi_state=None
     ) -> tuple[np.ndarray, np.ndarray]:
-    gain = 0.7  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
     # Build a Butterworth filter, this basically builds the gain curve we want
@@ -51,9 +50,6 @@ def high_pass_filter(
         # Apply filter statefully
         filtered_ch, ch_zi_new = signal.sosfilt(sos, ch_data, zi=ch_zi)
         
-        # Apply gain
-        filtered_ch = filtered_ch * gain
-        
         processed_channels.append(filtered_ch)
         new_zi_states.append(ch_zi_new)
 
@@ -71,7 +67,6 @@ def low_pass_filter(
         cutoff: float = 8000.0, 
         zi_state=None
     ) -> tuple[np.ndarray, np.ndarray]:
-    gain = 0.7  # Keep between 0 and 1 to prevent clipping
     n_frames, n_channels = data.shape
 
     # Build a Butterworth filter, this basically builds the gain curve we want
@@ -96,9 +91,6 @@ def low_pass_filter(
         
         # Apply filter statefully
         filtered_ch, ch_zi_new = signal.sosfilt(sos, ch_data, zi=ch_zi)
-        
-        # Apply gain
-        filtered_ch = filtered_ch * gain
         
         processed_channels.append(filtered_ch)
         new_zi_states.append(ch_zi_new)
