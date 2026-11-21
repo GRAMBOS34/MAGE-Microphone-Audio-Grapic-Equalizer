@@ -10,11 +10,36 @@ from MAGE import MAGE
 class PlaybackControls(ctk.CTkFrame):
     def __init__(self, master, width, height, fg_color, audioEngine:MAGE.AudioEngine):
         super().__init__(master, width, height, fg_color=fg_color)
+        self.grid_propagate(False)
         self.audioEngine = audioEngine
+
+        # * TITLE 
+        self.title = ctk.CTkLabel(
+            self,
+            text_color="#FFFFFF", 
+            width=40, 
+            text="Playback Controls",
+            font=("JetBrains Mono", 25) # (font, font size)
+        )
+        self.title.grid(row=0, column=0, padx=10, pady=10, sticky="n")
 
         # * PLAY BUTTON
         self.playBtn = ctk.CTkButton(self, text="Play", command=self.toggle_play)
-        self.playBtn.place(relx=0.5, rely=0.5, anchor="e")
+        self.playBtn.grid(row=1, column=1, padx=0, pady=10, sticky="n")
+
+        # * FLATTEN EQ BUTTON
+        self.flatten_eq = ctk.CTkButton(self, text="Reset EQ", command=self.reset_eq)
+        self.flatten_eq.place(relx=0.54, rely=0.35, anchor="n")
+
+        # * Volume Label
+        self.volumeLabel = ctk.CTkLabel(
+            self,
+            text_color="#FFFFFF", 
+            width=40, 
+            text="Volume",
+            font=("JetBrains Mono", 22) # (font, font size)
+        )
+        self.volumeLabel.grid(row=0, column=2, padx=10, pady=10, sticky="n")
 
         # * VOLUME SLIDER
         self.volumeSlider = ctk.CTkSlider(
@@ -24,7 +49,11 @@ class PlaybackControls(ctk.CTkFrame):
             orientation="vertical",
             command=audioEngine.change_volume
         )
-        self.volumeSlider.place(relx=0.79, rely=0)
+        self.volumeSlider.grid(row=1, column=2, padx=20, pady=0, sticky="n")
+
+    def reset_eq(self):
+        for property in self.audioEngine.effects_chain["GEQ"]["properties"]:
+            property[1] = 0
 
     def toggle_play(self):
         """
@@ -277,6 +306,14 @@ class EQSlider(ctk.CTkFrame):
         )
         self.q_setting.grid(row=2, column=0, padx=0, pady=5, sticky="n")
 
+        self.check_value()
+
+    def check_value(self):
+        gain_value = self.audioEngine.effects_chain["GEQ"]["properties"][self.index][1]
+        self.gain_slider.set(gain_value)
+
+        self.after(50, self.check_value)
+
     def adjust_gain(self, gain_value:float):
         self.audioEngine.effects_chain["GEQ"]["properties"][self.index][1] = gain_value
 
@@ -318,6 +355,7 @@ class GraphicEqualizer(ctk.CTkFrame):
 class InputDeviceSelect(ctk.CTkFrame):
     def __init__(self, master, width, height, fg_color, audioEngine:MAGE.AudioEngine):
         super().__init__(master, width, height, fg_color=fg_color)
+        self.audioEngine = audioEngine
 
         self.label = ctk.CTkLabel(
             self,
@@ -328,13 +366,6 @@ class InputDeviceSelect(ctk.CTkFrame):
         )
         self.label.place(relx=0.5, rely=0.05, anchor="n")
 
-        self.options = ctk.CTkSegmentedButton(
-            self,
-            values=["File", "Mic Input"],
-            command=self._on_option_change
-        )
-        self.options.place(relx=0.5, rely=0.2, anchor="n")
-
         # File path input (shown when "File" is selected)
         self.file_entry = ctk.CTkEntry(
             self,
@@ -342,31 +373,19 @@ class InputDeviceSelect(ctk.CTkFrame):
             width=width-20,
             font=("JetBrains Mono", 12),
         )
+        self.file_entry.place(relx=0.5, rely=0.2, anchor="n")
+        file = "test_audio/wav/ThankYouForTheVenom.wav"
+        self.file_entry.insert(0, file)
+        self._load_file(file) # for initialization
 
-        inputDevices = audioEngine.list_input_devices()
+        # * LOAD FILE BUTTON
+        self.loadFileBtn = ctk.CTkButton(self, text="Load File", command=lambda:self._load_file(self.file_entry.get()))
+        self.loadFileBtn.place(relx=0.5, rely=0.5, anchor="n")
 
-        # Mic dropdown (shown when "Mic Input" is selected)
-        self.mic_dropdown = ctk.CTkOptionMenu(
-            self,
-            values=inputDevices,
-            width=width-20,
-            dynamic_resizing=False,
-            font=("JetBrains Mono", 12),
-        )
+    def _load_file(self, filepath:str):
+        print(self.file_entry.get())
+        self.audioEngine.load_audio(self.file_entry.get())
 
-        # Set default value and sync visibility on startup
-        self.options.set("File")
-        self._on_option_change("File")
-
-    def _on_option_change(self, selected_value: str):
-        if selected_value == "File":
-            self.mic_dropdown.place_forget()
-            self.file_entry.place(relx=0.5, rely=0.35, anchor="n")
-        elif selected_value == "Mic Input":
-            self.file_entry.place_forget()
-            self.mic_dropdown.place(relx=0.5, rely=0.35, anchor="n")
-
-# * Output Device Select Class
 class OutputDeviceSelect(ctk.CTkFrame):
     def __init__(self, master, width, height, fg_color):
         super().__init__(master, width, height, fg_color=fg_color)

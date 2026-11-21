@@ -4,9 +4,6 @@ from MAGE import MAGE, ui_frames
 
 audioEngine = MAGE.AudioEngine() # Load audio engine
 
-file = "test_audio/wav/ThankYouForTheVenom.wav"
-audioEngine.load_audio(file)
-
 customtkinter.set_appearance_mode("dark")  
 customtkinter.set_default_color_theme("dark-blue")
 
@@ -61,7 +58,8 @@ class MAGEApp(customtkinter.CTk):
         self.graphic_equalizer.grid(row=0, column=2, padx=15, pady=(15, 0), sticky="e")
 
         # * ----------------- OUTPUT DEVICE SELECT ------------------------
-        OUTPUT_SELECT_BG_COLOR = "#00ff55"
+        # ! I couldnt get this working in time so i scrapped it
+        OUTPUT_SELECT_BG_COLOR = "#2b2b2b"
         self.output_device_select = ui_frames.OutputDeviceSelect(
             self, 
             width=200, 
@@ -109,7 +107,7 @@ class MAGEApp(customtkinter.CTk):
         self.LPF_control.grid(row=1, column=0, padx=15, pady=15, sticky="s")
 
         # * ----------------- PLAYBACK CONTROLS ------------------------
-        PLAYBACK_BG_COLOR = "#d900ff"
+        PLAYBACK_BG_COLOR = "#2b2b2b"
         self.playback_controls = ui_frames.PlaybackControls(
             self, 
             width=640, 

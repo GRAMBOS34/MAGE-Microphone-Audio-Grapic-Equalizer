@@ -23,6 +23,8 @@ class AudioEngine:
         # For the waveform visualizer
         self.data_block = None
 
+        self.mic_used = ""
+
         # This may have been unique to my system but it didn't
         # default to PipeWire but instead ALSA
         if platform.system() == "Linux":
@@ -69,7 +71,6 @@ class AudioEngine:
         
         self.file_data, self.samplerate = sf.read(filepath)
         self.channels = self.file_data.shape[1] if len(self.file_data.shape) > 1 else 1
-        info = sf.info(filepath)  # ? For metadata and showing a progress indicator (not yet implemented)
 
         print(f"{filepath} loaded")
 
@@ -110,10 +111,17 @@ class AudioEngine:
             print("Failed reading audio data")
             return
 
-        with sd.Stream(samplerate=self.samplerate, channels=self.channels) as stream:
-            # TODO: figure out seeking
-            # TODO: show where in the file it currently is
+        data = np.asarray(self.file_data)
+        # Infer channels if not already set: 1D -> mono (1), 2D -> second dim
+        channels = getattr(self, "channels", None)
+        if channels is None:
+            channels = 1 if data.ndim == 1 else data.shape[1]
 
+        # Ensure data is 2D with shape (frames, channels) for clean indexing & writes
+        if data.ndim == 1:
+            data = data.reshape(-1, 1)
+
+        with sd.Stream(samplerate=self.samplerate, channels=self.channels) as stream:
             blocksize = 1024
             block_start_idx = 0
 
